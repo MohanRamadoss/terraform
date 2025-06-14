@@ -1,0 +1,250 @@
+# 4-Hour AWS Terraform Training Program
+
+A comprehensive beginner-friendly training program designed to teach AWS Terraform fundamentals in 4 hours with hands-on exercises.
+
+## Prerequisites
+- Basic understanding of cloud computing concepts
+- AWS account (free tier is sufficient)
+- Computer with internet access
+- Text editor (VS Code recommended)
+
+## Training Schedule
+
+### Hour 1: Terraform Fundamentals (60 minutes)
+**Time: 0:00 - 1:00**
+
+#### Theory (30 minutes)
+- What is Infrastructure as Code (IaC)?
+- Introduction to Terraform
+- Terraform vs other IaC tools
+- Core Terraform workflow: Write → Plan → Apply
+- Understanding Terraform configuration syntax (HCL)
+
+#### Hands-on Setup (30 minutes)
+- Install Terraform CLI
+- Install AWS CLI
+- Configure AWS credentials
+- Set up VS Code with Terraform extension
+- Create first `main.tf` file
+- Run `terraform init`
+
+**Exercise 1**: Create a simple S3 bucket
+```hcl
+terraform {
+  required_providers {
+    aws = {
+      source  = "hashicorp/aws"
+      version = "~> 5.0"
+    }
+  }
+}
+
+provider "aws" {
+  region = "us-east-1"
+}
+
+resource "aws_s3_bucket" "my_first_bucket" {
+  bucket = "my-terraform-learning-bucket-${random_id.bucket_suffix.hex}"
+}
+
+resource "random_id" "bucket_suffix" {
+  byte_length = 4
+}
+```
+
+### Hour 2: Core Terraform Concepts (60 minutes)
+**Time: 1:00 - 2:00**
+
+#### Theory (20 minutes)
+- Terraform blocks, resources, and data sources
+- Variables and outputs
+- Terraform state file importance
+- Resource dependencies
+
+#### Hands-on Practice (40 minutes)
+**Exercise 2**: Build an EC2 instance with security group
+- Create variables.tf
+- Create outputs.tf
+- Learn about terraform plan and apply
+- Understanding resource dependencies
+
+```hcl
+# variables.tf
+variable "instance_type" {
+  description = "EC2 instance type"
+  type        = string
+  default     = "t3.micro"
+}
+
+variable "key_name" {
+  description = "AWS key pair name"
+  type        = string
+}
+
+# main.tf addition
+resource "aws_security_group" "web_sg" {
+  name_prefix = "web-sg-"
+  
+  ingress {
+    from_port   = 22
+    to_port     = 22
+    protocol    = "tcp"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+  
+  egress {
+    from_port   = 0
+    to_port     = 0
+    protocol    = "-1"
+    cidr_blocks = ["0.0.0.0/0"]
+  }
+}
+
+resource "aws_instance" "web_server" {
+  ami                    = "ami-0c7217cdde317cfec"  # Amazon Linux 2023
+  instance_type          = var.instance_type
+  key_name              = var.key_name
+  vpc_security_group_ids = [aws_security_group.web_sg.id]
+  
+  tags = {
+    Name = "My Web Server"
+  }
+}
+
+# outputs.tf
+output "instance_public_ip" {
+  description = "Public IP of the EC2 instance"
+  value       = aws_instance.web_server.public_ip
+}
+
+output "security_group_id" {
+  description = "Security group ID"
+  value       = aws_security_group.web_sg.id
+}
+```
+
+### Hour 3: Advanced Concepts & Best Practices (60 minutes)
+**Time: 2:00 - 3:00**
+
+#### Theory (25 minutes)
+- Terraform modules concept
+- State management and backends
+- Terraform workspaces
+- Common Terraform commands
+- Best practices and project structure
+
+#### Hands-on Practice (35 minutes)
+**Exercise 3**: Create a simple web application stack
+- VPC with public/private subnets
+- Load balancer
+- Auto Scaling Group (simplified)
+- Use data sources to fetch AMI
+
+```hcl
+# Data source example
+data "aws_ami" "amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+  
+  filter {
+    name   = "name"
+    values = ["amzn2-ami-hvm-*-x86_64-gp2"]
+  }
+}
+
+# VPC resources
+resource "aws_vpc" "main" {
+  cidr_block           = "10.0.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
+  
+  tags = {
+    Name = "terraform-vpc"
+  }
+}
+
+resource "aws_subnet" "public" {
+  vpc_id                  = aws_vpc.main.id
+  cidr_block              = "10.0.1.0/24"
+  availability_zone       = "us-east-1a"
+  map_public_ip_on_launch = true
+  
+  tags = {
+    Name = "public-subnet"
+  }
+}
+
+resource "aws_internet_gateway" "gw" {
+  vpc_id = aws_vpc.main.id
+  
+  tags = {
+    Name = "terraform-igw"
+  }
+}
+```
+
+### Hour 4: Real-world Project & Best Practices (60 minutes)
+**Time: 3:00 - 4:00**
+
+#### Project (40 minutes)
+**Exercise 4**: Deploy a complete web application
+- WordPress on EC2 with RDS MySQL database
+- Application Load Balancer
+- Route 53 (optional)
+- Implement proper security groups
+
+#### Review & Best Practices (20 minutes)
+- Code organization and module structure
+- Version control with Terraform
+- State file security and remote backends
+- Common pitfalls and how to avoid them
+- Terraform destroy and cleanup
+- Next steps for continued learning
+
+## Learning Objectives
+By the end of this 4-hour training, participants will be able to:
+
+1. ✅ Understand Infrastructure as Code concepts
+2. ✅ Write basic Terraform configurations
+3. ✅ Use Terraform CLI commands effectively
+4. ✅ Create and manage AWS resources with Terraform
+5. ✅ Understand Terraform state and its importance
+6. ✅ Use variables, outputs, and data sources
+7. ✅ Apply Terraform best practices
+8. ✅ Deploy a multi-tier application infrastructure
+
+## Required Resources
+- AWS Free Tier account
+- Terraform CLI (latest version)
+- AWS CLI
+- Text editor (VS Code with Terraform extension)
+- Git (for version control)
+
+## Safety Notes
+- Always use `terraform plan` before `terraform apply`
+- Keep AWS costs minimal by using free tier resources
+- Remember to run `terraform destroy` after exercises
+- Never commit AWS credentials to version control
+- Use `.gitignore` for Terraform state files
+
+## Additional Resources
+- [Terraform Official Documentation](https://www.terraform.io/docs)
+- [AWS Provider Documentation](https://registry.terraform.io/providers/hashicorp/aws/latest/docs)
+- [Terraform Best Practices Guide](https://www.terraform-best-practices.com/)
+- Practice repository: `sudomateo/terraform-training`
+
+## Post-Training Action Items
+1. Set up a personal AWS lab environment
+2. Practice building different AWS architectures
+3. Explore Terraform modules on the Registry
+4. Join Terraform community forums
+5. Consider pursuing HashiCorp Terraform Associate certification
+
+---
+
+**Trainer Notes:**
+- Encourage hands-on practice over theory
+- Take 10-minute breaks between hours
+- Adjust pace based on learner comfort level
+- Emphasize safety practices throughout
+- Provide real-world context for each concept
